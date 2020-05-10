@@ -4,11 +4,14 @@ import (
 	"context"
 	"flag"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -23,6 +26,12 @@ import (
 var log *logrus.Entry
 var logger = logrus.New()
 
+var (
+	promRegistry = prometheus.NewRegistry()
+)
+
+var metrics = common.GetPrometheusMetrics()
+
 func init() {
 	logger.SetFormatter(&logrus.TextFormatter{
 		//DisableColors:          true,
@@ -33,6 +42,13 @@ func init() {
 	log = logger.WithFields(logrus.Fields{
 		"app": "frontend-grpc",
 	})
+
+	promRegistry.MustRegister(metrics.LatestBlockCounter)
+	promRegistry.MustRegister(metrics.TotalErrors)
+	promRegistry.MustRegister(metrics.TotalBlocksServedConter)
+	promRegistry.MustRegister(metrics.SendTransactionsCounter)
+	promRegistry.MustRegister(metrics.TotalSaplingParamsCounter)
+	promRegistry.MustRegister(metrics.TotalSproutParamsCounter)
 }
 
 // TODO stream logging
@@ -83,7 +99,7 @@ type Options struct {
 	logLevel      uint64 `json:"log_level,omitempty"`
 	logPath       string `json:"log_file,omitempty"`
 	hush3ConfPath string `json:"hush3_conf,omitempty"`
-	cacheSize     int    `json:"hush3_conf,omitempty"`
+	cacheSize     int    `json:"cache_size,omitempty"`
 }
 
 func main() {
@@ -194,16 +210,21 @@ func main() {
 
 	stopChan := make(chan bool, 1)
 
-	// Start the block cache importer at latestblock - 100k(cache size)
-	cacheStart := blockHeight - opts.cacheSize
+	// Start the block cache importer at 100 blocks, so that the server is ready immediately.
+	// The remaining blocks are added historically
+	cacheStart := blockHeight - 100
 	if cacheStart < saplingHeight {
 		cacheStart = saplingHeight
 	}
 
+	// Start the ingestor
 	go common.BlockIngestor(rpcClient, cache, log, stopChan, cacheStart)
 
+	// Add historical blocks also
+	go common.HistoricalBlockIngestor(rpcClient, cache, log, cacheStart-1, opts.cacheSize, saplingHeight)
+
 	// Compact transaction service initialization
-	service, err := frontend.NewSQLiteStreamer(rpcClient, cache, log)
+	service, err := frontend.NewSQLiteStreamer(rpcClient, cache, log, metrics)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"error": err,
@@ -236,6 +257,19 @@ func main() {
 		// Stop the block ingestor
 		stopChan <- true
 	}()
+
+	// Start the metrics server
+	go func() {
+		http.Handle("/metrics", promhttp.HandlerFor(
+			promRegistry,
+			promhttp.HandlerOpts{},
+		))
+		log.Fatal(http.ListenAndServe(":2234", nil))
+	}()
+
+	// Start the download params handler
+	log.Infof("Starting params handler")
+	go common.ParamsDownloadHandler(metrics)
 
 	log.Infof("Starting gRPC server on %s", opts.bindAddr)
 
