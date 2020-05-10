@@ -22,12 +22,6 @@ func paramsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if strings.HasSuffix(req.URL.Path, "sprout-groth16.params") {
-		metrics.TotalSproutParamsCounter.Inc()
-		http.Redirect(w, req, "https://z.cash/downloads/sprout-groth16.params", 301)
-		return
-	}
-
 	http.Error(w, "Not Found", 404)
 }
 

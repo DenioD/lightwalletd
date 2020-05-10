@@ -48,7 +48,6 @@ func init() {
 	promRegistry.MustRegister(metrics.TotalBlocksServedConter)
 	promRegistry.MustRegister(metrics.SendTransactionsCounter)
 	promRegistry.MustRegister(metrics.TotalSaplingParamsCounter)
-	promRegistry.MustRegister(metrics.TotalSproutParamsCounter)
 }
 
 // TODO stream logging

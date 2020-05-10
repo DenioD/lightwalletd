@@ -9,7 +9,6 @@ type PrometheusMetrics struct {
 	SendTransactionsCounter   prometheus.Counter
 	TotalErrors               prometheus.Counter
 	TotalSaplingParamsCounter prometheus.Counter
-	TotalSproutParamsCounter  prometheus.Counter
 }
 
 func GetPrometheusMetrics() *PrometheusMetrics {
@@ -37,11 +36,6 @@ func GetPrometheusMetrics() *PrometheusMetrics {
 	m.TotalSaplingParamsCounter = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "params_sapling_total",
 		Help: "Total number of params downloads for sapling params",
-	})
-
-	m.TotalSproutParamsCounter = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "params_sprout_total",
-		Help: "Total number of params downloasd for sprout params",
 	})
 
 	return m
