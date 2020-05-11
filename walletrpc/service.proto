@@ -64,6 +64,10 @@ message Coinsupply {
     uint64 zfunds = 5;
     uint64 total = 6;
 }
+message RawMempool {
+    string ID = 1;
+    string txid = 2:
+}
 
 message TransparentAddress {
     string address = 1;
@@ -90,4 +94,5 @@ service CompactTxStreamer {
     // Misc
     rpc GetLightdInfo(Empty) returns (LightdInfo) {}
     rpc GetCoinsupply(Empty) returns (Coinsupply) {}
+    rpc GetRawMempool(Empty) returns (RawMempool) {}
 }

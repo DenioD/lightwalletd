@@ -276,6 +276,50 @@ func (m *SendResponse) GetErrorMessage() string {
 	return ""
 }
 
+type RawMempool struct {
+	ID                   interface{}  `json:"-"`
+	txid              	 string    `json:"-"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RawMempool) Reset()         { *m = RawMempool{} }
+func (m *RawMempool) String() string { return proto.CompactTextString(m) }
+func (*RawMempool) ProtoMessage()    {}
+func (*RawMempool) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{3}
+}
+
+func (m *RawMempool) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RawMempool.Unmarshal(m, b)
+}
+func (m *RawMempool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RawMempool.Marshal(b, m, deterministic)
+}
+func (m *RawMempool) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RawMempool.Merge(m, src)
+}
+func (m *RawMempool) XXX_Size() int {
+	return xxx_messageInfo_RawMempool.Size(m)
+}
+func (m *RawMempool) XXX_DiscardUnknown() {
+	xxx_messageInfo_RawMempool.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RawMempool proto.InternalMessageInfo
+
+func (m *RawMempool) GetID() string {
+	if m != nil {
+		return m.txid
+	}
+	return ""
+}
+
+
+
+
+
 // Empty placeholder. Someday we may want to specify e.g. a particular chain fork.
 type ChainSpec struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -622,6 +666,7 @@ func init() {
 	proto.RegisterType((*Empty)(nil), "cash.z.wallet.sdk.rpc.Empty")
 	proto.RegisterType((*LightdInfo)(nil), "cash.z.wallet.sdk.rpc.LightdInfo")
 	proto.RegisterType((*Coinsupply)(nil), "cash.z.wallet.sdk.rpc.Coinsupply")
+	proto.RegisterType((*RawMempool)(nil), "cash.z.wallet.sdk.rpc.RawMempool")
 	proto.RegisterType((*TransparentAddress)(nil), "cash.z.wallet.sdk.rpc.TransparentAddress")
 	proto.RegisterType((*TransparentAddressBlockFilter)(nil), "cash.z.wallet.sdk.rpc.TransparentAddressBlockFilter")
 }
@@ -697,6 +742,7 @@ type CompactTxStreamerClient interface {
 	// Misc
 	GetLightdInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LightdInfo, error)
 	GetCoinsupply(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Coinsupply, error)
+	GetRawMempool(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RawMempool, error)
 }
 
 type compactTxStreamerClient struct {
@@ -766,6 +812,8 @@ func (c *compactTxStreamerClient) GetTransaction(ctx context.Context, in *TxFilt
 	return out, nil
 }
 
+
+
 func (c *compactTxStreamerClient) SendTransaction(ctx context.Context, in *RawTransaction, opts ...grpc.CallOption) (*SendResponse, error) {
 	out := new(SendResponse)
 	err := c.cc.Invoke(ctx, "/cash.z.wallet.sdk.rpc.CompactTxStreamer/SendTransaction", in, out, opts...)
@@ -824,6 +872,15 @@ func (c *compactTxStreamerClient) GetCoinsupply(ctx context.Context, in *Empty, 
 	return out, nil
 }
 
+func (c *compactTxStreamerClient) GetRawMempool(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RawMempool, error) {
+	out := new(RawMempool)
+	err := c.cc.Invoke(ctx, "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetRawMempool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CompactTxStreamerServer is the server API for CompactTxStreamer service.
 type CompactTxStreamerServer interface {
 	// Compact Blocks
@@ -838,6 +895,7 @@ type CompactTxStreamerServer interface {
 	// Misc
 	GetLightdInfo(context.Context, *Empty) (*LightdInfo, error)
 	GetCoinsupply(context.Context, *Empty) (*Coinsupply, error)
+	GetRawMempool(context.Context, *Empty) (*RawMempool, error)
 }
 
 // UnimplementedCompactTxStreamerServer can be embedded to have forward compatible implementations.
@@ -864,6 +922,9 @@ func (*UnimplementedCompactTxStreamerServer) GetAddressTxids(req *TransparentAdd
 }
 func (*UnimplementedCompactTxStreamerServer) GetLightdInfo(ctx context.Context, req *Empty) (*LightdInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLightdInfo not implemented")
+}
+func (*UnimplementedCompactTxStreamerServer) GetRawMempool(ctx context.Context, req *Empty) (*RawMempool, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRawMempool not implemented")
 }
 func (*UnimplementedCompactTxStreamerServer) GetCoinsupply(ctx context.Context, req *Empty) (*Coinsupply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCoinsupply not implemented")
@@ -1023,6 +1084,24 @@ func _CompactTxStreamer_GetCoinsupply_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CompactTxStreamer_GetRawMempool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CompactTxStreamerServer).GetRawMempool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetRawMempool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CompactTxStreamerServer).GetRawMempool(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CompactTxStreamer_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cash.z.wallet.sdk.rpc.CompactTxStreamer",
 	HandlerType: (*CompactTxStreamerServer)(nil),
@@ -1050,6 +1129,10 @@ var _CompactTxStreamer_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCoinsupply",
 			Handler:    _CompactTxStreamer_GetCoinsupply_Handler,
+		},
+		{
+			MethodName: "GetRawMempool",
+			Handler:    _CompactTxStreamer_GetRawMempool_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -277,6 +277,24 @@ func (s *SqlStreamer) GetCoinsupply(ctx context.Context, in *walletrpc.Empty) (*
 	}, nil
 }
 
+// GetCoinsupply gets the Coinsupply  info
+func (s *SqlStreamer) GetRawMempool(ctx context.Context, in *walletrpc.Empty) (*walletrpc.RawMempool, error) {
+	transactionid, err := common.GetRawMempool(s.client)
+
+   if err != nil {
+	   s.log.WithFields(logrus.Fields{
+		   "error": err,
+	   }).Warn("Unable to get RawMempool")
+	   return nil, err
+   }
+
+   // TODO these are called Error but they aren't at the moment.
+   // A success will return code 0 and message txhash.
+   return &walletrpc.RawMempool{
+	   ID:                   transactionid ,
+   }, nil
+}
+
 
 // SendTransaction forwards raw transaction bytes to a hushd instance over JSON-RPC
 func (s *SqlStreamer) SendTransaction(ctx context.Context, rawtx *walletrpc.RawTransaction) (*walletrpc.SendResponse, error) {

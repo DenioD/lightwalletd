@@ -55,6 +55,8 @@ func GetSaplingInfo(rpcClient *rpcclient.Client) (int, int, string, string, int,
 	return int(saplingHeight), int(blockHeight), chainName, branchID, int(difficulty), int(longestchain), int(notarized), nil
 }
 
+
+
 func GetCoinsupply(rpcClient *rpcclient.Client) (string, string, int, int, int,int, error) {
 	result1, rpcErr := rpcClient.RawRequest("coinsupply", make([]json.RawMessage, 0))
 
@@ -88,6 +90,39 @@ func GetCoinsupply(rpcClient *rpcclient.Client) (string, string, int, int, int,i
 
 	return result,coin, int(height), int(supply),int(zfunds), int(total),  nil
 }
+
+func GetRawMempool(rpcClient *rpcclient.Client) ([]string, error) {
+
+			mempooltxid, rpcErr := rpcClient.RawRequest("getrawmempool", make([]json.RawMessage, 0))
+			var err error
+			var errCode int64
+	        if rpcErr != nil {
+
+				errParts := strings.SplitN(rpcErr.Error(), ":", 2)
+				errCode, err = strconv.ParseInt(errParts[0], 10, 32)
+				//Check to see if we are requesting a height the hushd doesn't have yet
+				if err == nil && errCode == -8 {
+					return nil, nil
+				}
+				return nil,errors.Wrap(rpcErr, "error requesting coinsupply")
+			}	
+
+	
+		
+				//}
+			
+				
+			var txha []string
+				err = json.Unmarshal([]byte(mempooltxid), &txha)
+				if err != nil {
+					return nil,  err
+				}
+
+				fmt.Println("Mempool txid", txha)
+					
+		return  txha, nil
+	
+	}
 
 func getBlockFromRPC(rpcClient *rpcclient.Client, height int) (*walletrpc.CompactBlock, error) {
 	params := make([]json.RawMessage, 2)
