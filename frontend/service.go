@@ -277,7 +277,7 @@ func (s *SqlStreamer) GetCoinsupply(ctx context.Context, in *walletrpc.Empty) (*
 	}, nil
 }
 
-// GetCoinsupply gets the Coinsupply  info
+// GetRawMempool gets the rawmempool  info
 func (s *SqlStreamer) GetRawMempool(ctx context.Context, in *walletrpc.Empty) (*walletrpc.RawMempool, error) {
 	transactionid, err := common.GetRawMempool(s.client)
 
