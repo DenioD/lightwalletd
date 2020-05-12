@@ -65,8 +65,8 @@ message Coinsupply {
     uint64 total = 6;
 }
 message RawMempool {
-    string ID = 1;
-    string txid = 2:
+   bytes data = 1;
+    //uint64 height = 2;
 }
 
 message TransparentAddress {

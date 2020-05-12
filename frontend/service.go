@@ -279,7 +279,7 @@ func (s *SqlStreamer) GetCoinsupply(ctx context.Context, in *walletrpc.Empty) (*
 
 // GetRawMempool gets the rawmempool  info
 func (s *SqlStreamer) GetRawMempool(ctx context.Context, in *walletrpc.Empty) (*walletrpc.RawMempool, error) {
-	transactionid, err := common.GetRawMempool(s.client)
+	data,height, err := common.GetRawMempool(s.client)
 
    if err != nil {
 	   s.log.WithFields(logrus.Fields{
@@ -291,7 +291,9 @@ func (s *SqlStreamer) GetRawMempool(ctx context.Context, in *walletrpc.Empty) (*
    // TODO these are called Error but they aren't at the moment.
    // A success will return code 0 and message txhash.
    return &walletrpc.RawMempool{
-	   ID:                   transactionid ,
+	   Data:                 data,
+	   Height:				uint64(height),
+
    }, nil
 }
 

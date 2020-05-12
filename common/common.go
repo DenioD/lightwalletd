@@ -91,37 +91,80 @@ func GetCoinsupply(rpcClient *rpcclient.Client) (string, string, int, int, int,i
 	return result,coin, int(height), int(supply),int(zfunds), int(total),  nil
 }
 
-func GetRawMempool(rpcClient *rpcclient.Client) ([]string, error) {
+func GetRawMempool(rpcClient *rpcclient.Client) ([]byte, uint64, error) {
 
 			mempooltxid, rpcErr := rpcClient.RawRequest("getrawmempool", make([]json.RawMessage, 0))
+			
 			var err error
+			var txBytes []byte
 			var errCode int64
-	        if rpcErr != nil {
+			var txHeight float64
 
-				errParts := strings.SplitN(rpcErr.Error(), ":", 2)
-				errCode, err = strconv.ParseInt(errParts[0], 10, 32)
-				//Check to see if we are requesting a height the hushd doesn't have yet
-				if err == nil && errCode == -8 {
-					return nil, nil
+			if rpcErr != nil {
+				if rpcErr != nil {
+				//	s.log.Errorf("Got error: %s", rpcErr.Error())
+					errParts := strings.SplitN(rpcErr.Error(), ":", 2)
+					errCode, err = strconv.ParseInt(errParts[0], 10, 32)
+					//Check to see if we are requesting a height the hushd doesn't have yet
+					if err == nil && errCode == -8 {
+						return nil,0, err
+					}
+					return nil,0, err
 				}
-				return nil,errors.Wrap(rpcErr, "error requesting coinsupply")
+
+			}
+
+			var txids []string
+			err = json.Unmarshal(mempooltxid, &txids)
+			if err != nil {
+			//	s.log.Errorf("Got error: %s", err.Error())
+				return nil,0, err
 			}	
 
-	
-		
-				//}
-			
-				
-			var txha []string
-				err = json.Unmarshal([]byte(mempooltxid), &txha)
-				if err != nil {
-					return nil,  err
-				}
+			for _,txidstr := range txids {
 
-				fmt.Println("Mempool txid", txha)
-					
-		return  txha, nil
-	
+				txid, _ := hex.DecodeString(txidstr)
+
+				// Txid is read as a string, which is in big-endian order. But when converting
+		// to bytes, it should be little-endian
+		for left, right := 0, len(txid)-1; left < right; left, right = left+1, right-1 {
+			txid[left], txid[right] = txid[right], txid[left]
+		}
+		
+		fmt.Println("Mempool txid string", txidstr)
+		fmt.Println("Mempool txid bytes", txid)
+
+
+				params := make([]json.RawMessage, 1)
+				params[0] = json.RawMessage("\"" + txidstr + "\"")
+
+			result, rpcErr := rpcClient.RawRequest("getrawtransaction", params)
+			fmt.Println("Transaction", result)
+
+			if rpcErr != nil {
+				
+			}
+
+			var txhex string
+		err = json.Unmarshal(result, &txhex)
+		if err != nil {
+			return nil,0, err
+		}
+
+		txBytes, err = hex.DecodeString(txhex)
+		if err != nil {
+			return nil,0, err
+		}
+
+		fmt.Println("txBtyes :", txBytes)
+
+		txHeight = 0
+
+			}
+
+
+			return	 txBytes, uint64(txHeight),nil
+			
 	}
 
 func getBlockFromRPC(rpcClient *rpcclient.Client, height int) (*walletrpc.CompactBlock, error) {

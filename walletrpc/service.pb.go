@@ -277,8 +277,8 @@ func (m *SendResponse) GetErrorMessage() string {
 }
 
 type RawMempool struct {
-	ID                   interface{}  `json:"-"`
-	txid              	 string    `json:"-"`
+	Data                 []byte   `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Height               uint64   `json:"-"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -309,11 +309,17 @@ func (m *RawMempool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RawMempool proto.InternalMessageInfo
 
-func (m *RawMempool) GetID() string {
+func (m *RawMempool) GetID() []byte {
 	if m != nil {
-		return m.txid
+		return m.Data
 	}
-	return ""
+	return nil
+}
+func (m *RawMempool) GetHeight() uint64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
 }
 
 
